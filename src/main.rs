@@ -1,21 +1,17 @@
-use std::net::Ipv4Addr;
+mod schema;
+mod vlan;
 
-use ipnet::Ipv4Net;
-
-use crate::{ip_address::IpAddress, ip_network::IpNetwork, ip_status::IpStatus};
-
-mod ip_address;
-mod ip_network;
-pub mod ip_status;
+use diesel::prelude::*;
 
 fn main() {
+    dotenvy::dotenv().ok();
+    let url = std::env::var("DATABASE_URL").expect("DATABASE_URL fehlt");
+    let mut conn = PgConnection::establish(&url).expect("Verbindung fehlgeschlagen");
 
-    let network = Ipv4Net::new(Ipv4Addr::new(10, 1, 1, 0), 24).unwrap();
+    let neu = vlan::create(&mut conn, 20, "Server").expect("Insert fehlgeschlagen");
+    println!("Angelegt: {neu:?}");
 
-    let mut test_net = IpNetwork::new(String::from("Test Netz"), String::from("Test Netz"), network);
-
-
-    let mut ip = IpAddress::new(String::from("Test"), Ipv4Addr::new(127, 0, 0, 1).into(), String::from("This is a test"));
-    ip.change_status(IpStatus::Inactive);
-    println!("Hello, world!");
+    for v in vlan::list(&mut conn).expect("Query fehlgeschlagen") {
+        println!("VLAN {} ({})", v.vid, v.name);
+    }
 }
