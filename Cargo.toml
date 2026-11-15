@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-diesel = { version = "2.4.0", features = ["postgres", "ipnet-address"] }
+axum = "0.8.9"
+diesel = { version = "2.4.0", features = ["postgres", "ipnet-address", "r2d2"] }
 dotenvy = "0.15.7"
 ipnet = "2.12.2"
+tokio = { version = "1.54.1", features = ["full"] }
