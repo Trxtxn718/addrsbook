@@ -67,3 +67,10 @@ pub fn list_in_prefix(conn: &mut PgConnection, prefix_id: i32) -> QueryResult<Ve
         .select(IpAddress::as_select())
         .load(conn)
 }
+
+pub fn list(conn: &mut PgConnection) -> QueryResult<Vec<IpAddress>> {
+    ip_addresses::table
+        .order(ip_addresses::address.asc())
+        .select(IpAddress::as_select())
+        .load(conn)
+}
