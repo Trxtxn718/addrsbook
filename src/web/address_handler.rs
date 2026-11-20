@@ -10,7 +10,7 @@ use crate::address;
 
 pub fn routes() -> Router<DbPool>{
     Router::new()
-        .route("addresses", get(list).post(create))
+        .route("/addresses", get(list).post(create))
 }
 
 async fn list(State(pool): State<DbPool>) -> String {
