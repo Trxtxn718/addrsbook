@@ -2,26 +2,18 @@ mod address;
 mod prefix;
 mod schema;
 mod vlan;
-use diesel::prelude::*;
-use ipnet::IpNet;
+mod web;
+mod db;
 
-fn main() {
+
+#[tokio::main]
+async fn main() {
     dotenvy::dotenv().ok();
-    let url = std::env::var("DATABASE_URL").expect("DATABASE_URL is missing!");
-    let mut conn = PgConnection::establish(&url).expect("Connection failed");
+    let url = std::env::var("DATABASE_URL").expect("DATABASE_URL fehlt");
+    let pool = db::create_pool(&url);
 
-    // VLAN testing:
-    let new_vlan = vlan::create(&mut conn, 30, "Server").expect("Insert failed");
-    println!("Angelegt: {new_vlan:?}");
+    let app= web::router().with_state(pool);
 
-    for v in vlan::list(&mut conn).expect("Error with query") {
-        println!("VLAN {} ({})", v.vid, v.name);
-    }
-
-    // Prefix testing:
-    let test_net: IpNet = "10.0.0.0/24".parse().unwrap();
-    let new_prefix = prefix::create(&mut conn, test_net, None, Some("Server")).unwrap();
-    let new_address = address::create(&mut conn, "10.0.0.5".parse().unwrap(), new_prefix.id, Some("nas")).unwrap();
-    
-    print!("{}", new_address.address);
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 }
